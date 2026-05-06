@@ -1,0 +1,816 @@
+@charset "utf-8";
+
+:root {
+	--duo-obituary-blue: #4f82c8;
+	--duo-obituary-blue-dark: #356fb8;
+	--duo-obituary-blue-soft: #eef5ff;
+	--duo-obituary-text: #1f2933;
+	--duo-obituary-muted: #6b7280;
+	--duo-obituary-line: #e0e3e8;
+	--duo-obituary-head: #eef0f4;
+	--duo-obituary-surface: #ffffff;
+	--duo-obituary-expired: #f7f8fa;
+	--duo-obituary-ring: rgba(79, 130, 200, 0.18);
+	--duo-obituary-shadow: none;
+}
+
+.duo-obituary,
+.duo-obituary * {
+	box-sizing: border-box;
+}
+
+.duo-obituary {
+	width: 100%;
+	font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+	color: var(--duo-obituary-text);
+	font-size: 16px;
+	line-height: 1.55;
+}
+
+.duo-obituary a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.duo-obituary-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 86px;
+	height: 40px;
+	padding: 0 20px;
+	border: 1px solid transparent;
+	border-radius: 0;
+	font-size: 15px;
+	font-weight: 700;
+	cursor: pointer;
+	appearance: none;
+	transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.duo-obituary-button.primary {
+	background: var(--duo-obituary-blue);
+	color: #fff;
+}
+
+.duo-obituary-button.primary:hover {
+	background: var(--duo-obituary-blue-dark);
+	color: #fff;
+}
+
+.duo-obituary-button.secondary {
+	background: #fff;
+	color: var(--duo-obituary-text);
+	border-color: #d1d5db;
+}
+
+.duo-obituary-list-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px;
+	margin-bottom: 18px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.duo-obituary-total {
+	padding-top: 9px;
+	color: #333;
+	font-weight: 700;
+	font-size: 18px;
+}
+
+.duo-obituary-search {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.duo-obituary-search label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+	font-size: 14px;
+	font-weight: 500;
+	color: #333;
+}
+
+.duo-obituary-search input[type="search"] {
+	width: 260px;
+	height: 40px;
+	border: 1px solid #cfd5df;
+	border-radius: 0;
+	padding: 0 14px;
+	font-size: 15px;
+	background: #fff;
+	outline: none;
+	box-shadow: none;
+}
+
+.duo-obituary-search input[type="search"]:focus {
+	border-color: var(--duo-obituary-blue);
+	box-shadow: 0 0 0 4px var(--duo-obituary-ring);
+}
+
+.duo-obituary-search-group {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.duo-obituary-table-wrap,
+.duo-obituary-latest-table-wrap {
+	width: 100%;
+	overflow: auto;
+	background: var(--duo-obituary-surface);
+	border: 0;
+	border-top: 4px solid var(--duo-obituary-blue);
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.duo-obituary-table,
+.duo-obituary-latest-table,
+.duo-obituary-detail-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+.duo-obituary-table .duo-col-affiliation {
+	width: 10%;
+}
+
+.duo-obituary-table .duo-col-deceased {
+	width: 9%;
+}
+
+.duo-obituary-table .duo-col-mourner {
+	width: 25%;
+}
+
+.duo-obituary-table .duo-col-date {
+	width: 11%;
+}
+
+.duo-obituary-table .duo-col-place {
+	width: 13%;
+}
+
+.duo-obituary-table .duo-col-burial {
+	width: 10%;
+}
+
+.duo-obituary-table th,
+.duo-obituary-latest-table th {
+	height: 68px;
+	background: var(--duo-obituary-head);
+	font-weight: 800;
+	font-size: 16px;
+	letter-spacing: 0;
+	color: #222;
+	text-align: center;
+	border-bottom: 1px solid var(--duo-obituary-line);
+}
+
+.duo-obituary-table td,
+.duo-obituary-latest-table td {
+	height: 82px;
+	padding: 16px 14px;
+	text-align: center;
+	border-bottom: 1px solid var(--duo-obituary-line);
+	vertical-align: middle;
+	color: var(--duo-obituary-text);
+	font-size: 14px;
+}
+
+.duo-obituary-table td:nth-child(3),
+.duo-obituary-table td:nth-child(7),
+.duo-obituary-table td:nth-child(8),
+.duo-obituary-latest-table td:nth-child(3),
+.duo-obituary-latest-table td:nth-child(5) {
+	text-align: left;
+}
+
+.duo-obituary-name a,
+.duo-obituary-table td:nth-child(3) a,
+.duo-obituary-latest-table td:nth-child(3) a {
+	font-weight: 700;
+	color: #111;
+}
+
+.duo-obituary-name a:hover,
+.duo-obituary-table td:nth-child(3) a:hover,
+.duo-obituary-latest-table td:nth-child(3) a:hover {
+	color: var(--duo-obituary-blue-dark);
+}
+
+.duo-obituary-ellipsis {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.duo-obituary-no-results {
+	height: 260px !important;
+}
+
+.duo-obituary-empty {
+	height: 260px;
+	text-align: center !important;
+	vertical-align: middle !important;
+	color: #999;
+	font-size: 16px;
+}
+
+
+.duo-obituary-latest-search-container.mobile-only {
+	display: none;
+}
+
+.duo-obituary-badge {
+	display: inline-flex;
+	align-items: center;
+	height: 24px;
+	padding: 0 8px;
+	margin-left: 8px;
+	background: #e2e8f0;
+	color: #475569;
+	font-size: 12px;
+	font-weight: 700;
+	vertical-align: middle;
+}
+
+.duo-obituary-table tr.is-expired,
+.duo-obituary-latest-table tr.is-expired,
+.duo-obituary-mobile-latest-table tr.is-expired,
+.duo-obituary-mobile-item.is-expired {
+	background: var(--duo-obituary-expired);
+	color: #8b929d;
+}
+
+.duo-obituary-table tr.is-expired td,
+.duo-obituary-latest-table tr.is-expired td,
+.duo-obituary-mobile-latest-table tr.is-expired td {
+	color: #8b929d;
+}
+
+.duo-obituary-pagination {
+	display: flex;
+	justify-content: center;
+	margin: 32px 0 24px;
+}
+
+.duo-obituary-pagination ul {
+	display: flex;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.duo-obituary-pagination a,
+.duo-obituary-pagination span {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	height: 36px;
+	border: 1px solid #d6dbe3;
+	border-radius: 0;
+	color: #111827;
+	background: #fff;
+}
+
+.duo-obituary-pagination .active,
+.duo-obituary-pagination .current {
+	background: var(--duo-obituary-blue);
+	border-color: var(--duo-obituary-blue);
+	color: #fff;
+	font-weight: 700;
+}
+
+.duo-obituary-control {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 24px;
+}
+
+.duo-obituary-control .left,
+.duo-obituary-control .right {
+	display: flex;
+	gap: 8px;
+}
+
+.duo-obituary-latest {
+	position: relative;
+	min-height: 200px;
+}
+
+/* 로딩 오버레이 */
+.duo-obituary-loading-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(255, 255, 255, 0.7);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+	backdrop-filter: blur(2px);
+	border-radius: 8px;
+}
+
+.duo-obituary-spinner {
+	width: 40px;
+	height: 40px;
+	border: 4px solid #f3f3f3;
+	border-top: 4px solid #3498db;
+	border-radius: 50%;
+	animation: duo-spin 1s linear infinite;
+}
+
+@keyframes duo-spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+
+/* 최신글 칼럼 너비 */
+.duo-obituary-latest-table.header-table {
+	border-bottom: none;
+	margin-bottom: 0;
+}
+
+
+.duo-obituary-latest-table.body-table {
+	margin-top: 0;
+	border-top: none;
+}
+
+.is-rolling-container {
+	height: 260px; /* 52px * 5 */
+	overflow: hidden;
+	position: relative;
+}
+
+.is-rolling-target {
+	will-change: transform;
+}
+
+
+.duo-latest-col-date {
+	width: 20%;
+}
+
+.duo-latest-col-place {
+	width: 20%;
+}
+
+.duo-obituary-latest-table th {
+	height: 52px;
+	font-size: 14px;
+}
+
+.duo-obituary-latest-table td {
+	height: 52px;
+	padding: 10px 14px;
+	font-size: 13px;
+}
+
+.duo-obituary-latest-table .duo-obituary-ellipsis {
+	max-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 롤링 애니메이션 */
+.duo-obituary-latest-table-wrap,
+.duo-obituary-mobile-latest-table-wrap {
+	overflow: hidden;
+	scrollbar-width: none;
+	position: relative;
+}
+
+.is-rolling .duo-obituary-latest-table-wrap,
+.is-rolling .duo-obituary-mobile-latest-table-wrap {
+	max-height: 260px; /* 5개 행 기준 */
+}
+
+
+
+.duo-obituary-latest-table-wrap::-webkit-scrollbar {
+	display: none;
+}
+
+.duo-obituary-latest.is-rolling .duo-obituary-latest-table-wrap {
+	max-height: 332px;
+	overflow: hidden;
+}
+
+.duo-obituary-latest.is-rolling .duo-obituary-latest-table thead {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+}
+
+/* 모바일 최신글 (기본: 숨김) */
+.duo-obituary-mobile-latest {
+	display: none;
+}
+
+.duo-obituary-mobile-list {
+	display: none;
+}
+
+.duo-obituary-document-main {
+	display: grid;
+	grid-template-columns: minmax(220px, 330px) 1fr;
+	gap: 28px;
+	align-items: start;
+}
+
+.duo-obituary-editor {
+	max-width: 1080px;
+	margin: 32px auto;
+	padding: 0 20px;
+}
+
+.duo-obituary-photo {
+	aspect-ratio: 4 / 5;
+	border: 1px solid #eee;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #ccc;
+	font-size: 20px;
+	font-weight: 500;
+	overflow: hidden;
+	background: #fdfdfd;
+	border-radius: 8px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+	position: relative;
+}
+
+.duo-obituary-photo::after {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0;
+	border: 1px solid rgba(0,0,0,0.03);
+	pointer-events: none;
+	border-radius: 8px;
+}
+
+.duo-obituary-photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.3s ease;
+}
+
+.duo-obituary-photo:hover img {
+	transform: scale(1.05);
+}
+
+
+.duo-obituary-detail-table {
+	border-top: 4px solid var(--duo-obituary-blue);
+	border-bottom: 1px solid #eee;
+	background: #fff;
+}
+
+
+.duo-obituary-detail-table th {
+	background-color: #fafafa;
+	color: #555;
+	font-weight: 600;
+	border-bottom: 1px solid #eee;
+}
+
+.duo-obituary-detail-table td {
+	border-bottom: 1px solid #eee;
+	color: #333;
+}
+
+
+.duo-obituary-detail-table th,
+.duo-obituary-detail-table td {
+	height: 58px;
+	border-bottom: 1px solid #222;
+	padding: 12px 20px;
+	vertical-align: middle;
+}
+
+.duo-obituary-detail-table th {
+	width: 180px;
+	background: #f3f3f3;
+	text-align: center;
+	font-weight: 800;
+}
+
+.duo-obituary-detail-table td {
+	white-space: pre-line;
+}
+
+.duo-obituary-document-status {
+	margin-bottom: 12px;
+	text-align: right;
+}
+
+.duo-obituary-form {
+	display: grid;
+	gap: 18px;
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 28px;
+	background: #fff;
+	border: 1px solid var(--duo-obituary-line);
+	border-radius: 8px;
+	box-shadow: var(--duo-obituary-shadow);
+}
+
+.duo-obituary-field,
+.duo-obituary-field-grid {
+	display: grid;
+	gap: 8px;
+}
+
+.duo-obituary-field-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.duo-obituary-field label {
+	font-weight: 700;
+}
+
+.duo-obituary-field label span {
+	color: #d92d20;
+}
+
+.duo-obituary-field input[type="text"],
+.duo-obituary-field input[type="password"],
+.duo-obituary-field input[type="datetime-local"],
+.duo-obituary-field input[type="file"],
+.duo-obituary-field textarea {
+	width: 100%;
+	min-height: 44px;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	padding: 10px 12px;
+	font-size: 16px;
+	background: #fff;
+	outline: none;
+}
+
+.duo-obituary-field input[type="text"]:focus,
+.duo-obituary-field input[type="password"]:focus,
+.duo-obituary-field input[type="datetime-local"]:focus,
+.duo-obituary-field textarea:focus {
+	border-color: var(--duo-obituary-blue);
+	box-shadow: 0 0 0 4px var(--duo-obituary-ring);
+}
+
+.duo-obituary-field textarea {
+	resize: vertical;
+}
+
+.duo-obituary-current-file {
+	margin-bottom: 8px;
+	color: var(--duo-obituary-muted);
+}
+
+@media (max-width: 768px) {
+	.duo-obituary {
+		font-size: 15px;
+	}
+
+	.duo-obituary-list-header {
+		display: block;
+		margin-bottom: 22px;
+	}
+
+	.duo-obituary-total {
+		padding-top: 0;
+		margin-bottom: 14px;
+	}
+
+	.duo-obituary-search {
+		justify-content: flex-start;
+		gap: 10px;
+	}
+
+	.duo-obituary-search-group {
+		width: 100%;
+	}
+
+	.duo-obituary-search-group input[type="search"] {
+		flex: 1;
+		width: auto;
+	}
+
+	.duo-obituary-search-group .duo-obituary-button {
+		flex-shrink: 0;
+	}
+
+	.duo-obituary-table-wrap {
+		display: none;
+	}
+
+	.duo-obituary-mobile-list {
+		display: block;
+	}
+
+	.duo-obituary-latest-desktop {
+		display: none;
+	}
+
+	.duo-obituary-mobile-latest {
+		display: block;
+	}
+
+	.duo-obituary-latest-search-container {
+		margin-bottom: 20px;
+	}
+
+	.duo-obituary-latest-search-container.mobile-only {
+		display: block;
+	}
+
+
+	.duo-obituary-mobile-latest-table {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: fixed;
+		font-size: 14px;
+	}
+
+	.duo-obituary-mobile-latest-table.header-table {
+		border-bottom: none;
+	}
+
+	.duo-obituary-mobile-latest-table.body-table {
+		border-top: none;
+	}
+
+
+	.duo-obituary-mobile-latest-table th,
+	.duo-obituary-mobile-latest-table td {
+		padding: 10px 5px;
+		text-align: center;
+		border: 1px solid #ddd;
+		height: 52px;
+		box-sizing: border-box;
+	}
+
+	.duo-obituary-mobile-latest-table th {
+		background-color: #f8f9fa;
+		font-weight: bold;
+	}
+
+	.duo-obituary-mobile-latest-table-wrap.is-rolling-container {
+		height: 260px; /* 52px * 5 */
+		overflow: hidden;
+	}
+
+
+	.duo-obituary-search--mobile {
+		display: flex;
+	}
+
+	.duo-obituary-search--mobile .duo-obituary-search-group {
+		width: 100%;
+	}
+
+	.duo-obituary-search--mobile .duo-obituary-search-group input[type="search"] {
+		flex: 1;
+		width: auto;
+		height: 40px;
+		border: 1px solid #cfd5df;
+		border-radius: 0;
+		padding: 0 14px;
+		font-size: 14px;
+		background: #fff;
+		outline: none;
+		box-shadow: none;
+	}
+
+	.duo-obituary-search--mobile .duo-obituary-search-group input[type="search"]:focus {
+		border-color: var(--duo-obituary-blue);
+		box-shadow: 0 0 0 4px var(--duo-obituary-ring);
+	}
+
+	.duo-obituary-search--mobile .duo-obituary-search-group .duo-obituary-button {
+		flex-shrink: 0;
+	}
+
+	.duo-obituary-mobile-latest-table-wrap {
+		width: 100%;
+		overflow: auto;
+		border-top: 4px solid var(--duo-obituary-blue);
+	}
+
+	.duo-obituary-mobile-latest-table {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: fixed;
+	}
+
+	.duo-obituary-mobile-latest-table th {
+		height: 48px;
+		background: var(--duo-obituary-head);
+		font-weight: 800;
+		font-size: 14px;
+		color: #222;
+		text-align: center;
+		border-bottom: 1px solid var(--duo-obituary-line);
+	}
+
+	.duo-obituary-mobile-latest-table td {
+		height: 54px;
+		padding: 10px 8px;
+		text-align: center;
+		border-bottom: 1px solid var(--duo-obituary-line);
+		vertical-align: middle;
+		color: var(--duo-obituary-text);
+		font-size: 13px;
+	}
+
+	.duo-obituary-mobile-latest-table .duo-obituary-name a {
+		font-weight: 700;
+		color: #111;
+	}
+
+	.duo-obituary-mobile-latest-table .duo-obituary-name a:hover {
+		color: var(--duo-obituary-blue-dark);
+	}
+
+	.duo-obituary-mobile-item {
+		display: block;
+		padding: 20px 0;
+		border-bottom: 1px solid var(--duo-obituary-line);
+	}
+
+	.duo-obituary-mobile-title {
+		font-size: 20px;
+		font-weight: 800;
+		color: #111827;
+		margin-bottom: 6px;
+	}
+
+	.duo-obituary-mobile-line {
+		color: #2f3642;
+		font-weight: 600;
+		margin-bottom: 5px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.duo-obituary-mobile-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 12px;
+		color: #8a9099;
+		font-weight: 600;
+	}
+
+	.duo-obituary-document-main {
+		display: block;
+	}
+
+	.duo-obituary-photo {
+		max-width: 330px;
+		margin: 0 auto 20px;
+	}
+
+	.duo-obituary-detail-table th {
+		width: 110px;
+		padding: 10px;
+	}
+
+	.duo-obituary-detail-table td {
+		padding: 10px 12px;
+	}
+
+	.duo-obituary-field-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.duo-obituary-control {
+		align-items: stretch;
+	}
+}
