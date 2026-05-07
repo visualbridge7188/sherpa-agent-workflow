@@ -118,20 +118,33 @@ function transformMessages(body) {
 }
 
 async function handleStream(response, requestBody, res) {
-  res.writeHead(200, { "Content-Type": "text/event-stream" });
+  res.writeHead(200, { 
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive"
+  });
+  
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    // 여기서 reasoning_content를 일반 content로 변환하여 Codex가 이해하게 함
-    const processed = processZaiChunk(chunk);
-    res.write(processed);
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value, { stream: true });
+      // reasoning_content -> content 변환 및 스트림 포워딩
+      const processed = processZaiChunk(chunk);
+      res.write(processed);
+    }
+    // OpenAI/Codex 규격에 맞춰 명시적인 종료 신호 전송
+    res.write("data: [DONE]\n\n");
+  } catch (err) {
+    log(`[Proxy] Stream Error: ${err.message}`);
+  } finally {
+    res.end();
+    notifyUser();
   }
-  res.end();
-  notifyUser();
 }
 
 function processZaiChunk(chunk) {
