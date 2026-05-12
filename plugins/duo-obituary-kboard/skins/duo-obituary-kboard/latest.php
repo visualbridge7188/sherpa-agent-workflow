@@ -1,5 +1,5 @@
 <?php
-if(!defined('ABSPATH')){
+if (!defined('ABSPATH')) {
 	exit;
 }
 
@@ -9,26 +9,34 @@ if(!defined('ABSPATH')){
 $board_id = $list->board_id;
 $latest_list = new KBContentList($board_id);
 $latest_list->is_latest = true; // 최신글 모드 활성화 (날짜 필터 작동을 위함)
+if (empty($latest_list->board) && class_exists('KBoard')) {
+	$latest_list->board = new KBoard($board_id);
+}
 $latest_list->rpp(100)->getList();
 
 $items = array();
-while($content = $latest_list->hasNext()){
+while ($content = $latest_list->hasNext()) {
 	$items[] = $content;
 }
+$items = duo_obituary_active_latest_items($items);
 $should_roll = count($items) > 5;
 
 // 최신글 검색용
 $latest_search_keyword = isset($_GET['keyword']) ? sanitize_text_field(wp_unslash($_GET['keyword'])) : '';
 ?>
 
-<div id="duo-obituary-latest" class="duo-obituary duo-obituary-latest <?php echo $should_roll ? 'is-rolling' : ''?>" data-interval="3000">
-	<div class="duo-obituary-loading-overlay" style="display:none;"><div class="duo-obituary-spinner"></div></div>
+<div id="duo-obituary-latest" class="duo-obituary duo-obituary-latest <?php echo $should_roll ? 'is-rolling' : '' ?>"
+	data-interval="3000">
+	<div class="duo-obituary-loading-overlay" style="display:none;">
+		<div class="duo-obituary-spinner"></div>
+	</div>
 
 	<!-- 공용 검색창 -->
 	<div class="duo-obituary-latest-search-container mobile-only">
 		<form class="duo-obituary-latest-search-form" onsubmit="return false;">
 			<div class="duo-obituary-search-group">
-				<input type="search" name="keyword" value="<?php echo esc_attr($latest_search_keyword)?>" placeholder="고인명 또는 상주명 검색" class="duo-obituary-latest-search-input">
+				<input type="search" name="keyword" value="<?php echo esc_attr($latest_search_keyword) ?>"
+					placeholder="고인명 또는 상주명 검색" class="duo-obituary-latest-search-input">
 				<button type="button" class="duo-obituary-button primary duo-obituary-latest-search-submit">검색</button>
 			</div>
 		</form>
@@ -51,7 +59,7 @@ $latest_search_keyword = isset($_GET['keyword']) ? sanitize_text_field(wp_unslas
 					<th>고인명</th>
 					<th>상주명</th>
 					<th>발인일</th>
-					<th>장소</th>
+					<th>장례식장</th>
 				</tr>
 			</thead>
 		</table>
@@ -65,23 +73,33 @@ $latest_search_keyword = isset($_GET['keyword']) ? sanitize_text_field(wp_unslas
 					<col class="duo-latest-col-place">
 				</colgroup>
 				<tbody>
-					<tr class="duo-obituary-no-results" style="display:none;"><td colspan="5" class="duo-obituary-empty">검색 결과가 없습니다.</td></tr>
-					<?php foreach($items as $content):?>
+					<tr class="duo-obituary-no-results" style="display:none;">
+						<td colspan="5" class="duo-obituary-empty">검색 결과가 없습니다.</td>
+					</tr>
+					<?php if (!$items): ?>
+						<tr>
+							<td colspan="5" class="duo-obituary-empty">현재 부고 소식이 없습니다.</td>
+						</tr>
+					<?php endif ?>
+					<?php foreach ($items as $content): ?>
 						<?php
 						$document_url = $url->getDocumentURLWithUID($content->uid);
 						$is_expired = duo_obituary_is_expired($content);
 						?>
-						<tr class="<?php echo $is_expired ? 'is-expired' : ''?>">
-							<td><?php echo duo_obituary_display($content, 'affiliation')?></td>
+						<tr class="<?php echo $is_expired ? 'is-expired' : '' ?>">
+							<td><?php echo duo_obituary_display($content, 'affiliation') ?></td>
 							<td class="duo-obituary-name">
-								<a href="<?php echo esc_url($document_url)?>"><?php echo duo_obituary_display($content, 'deceased_name')?></a>
-								<?php if($is_expired):?><span class="duo-obituary-badge">지난 부고</span><?php endif?>
+								<a
+									href="<?php echo esc_url($document_url) ?>"><?php echo duo_obituary_display($content, 'deceased_name') ?></a>
+								<?php if ($is_expired): ?><span class="duo-obituary-badge">지난 부고</span><?php endif ?>
 							</td>
-							<td class="duo-obituary-ellipsis"><a href="<?php echo esc_url($document_url)?>"><?php echo duo_obituary_display($content, 'chief_mourner')?></a></td>
-							<td><?php echo duo_obituary_datetime_display($content, 'funeral_date')?></td>
-							<td class="duo-obituary-ellipsis"><?php echo duo_obituary_display($content, 'place')?></td>
+							<td class="duo-obituary-ellipsis"><a
+									href="<?php echo esc_url($document_url) ?>"><?php echo duo_obituary_display($content, 'chief_mourner') ?></a>
+							</td>
+							<td><?php echo duo_obituary_datetime_display($content, 'funeral_date') ?></td>
+							<td class="duo-obituary-ellipsis"><?php echo duo_obituary_display($content, 'place') ?></td>
 						</tr>
-					<?php endforeach?>
+					<?php endforeach ?>
 				</tbody>
 			</table>
 		</div>
@@ -112,20 +130,28 @@ $latest_search_keyword = isset($_GET['keyword']) ? sanitize_text_field(wp_unslas
 					<col style="width: 45%;">
 				</colgroup>
 				<tbody>
-					<tr class="duo-obituary-no-results" style="display:none;"><td colspan="3" class="duo-obituary-empty">검색 결과가 없습니다.</td></tr>
-					<?php foreach($items as $content):?>
+					<tr class="duo-obituary-no-results" style="display:none;">
+						<td colspan="3" class="duo-obituary-empty">검색 결과가 없습니다.</td>
+					</tr>
+					<?php if (!$items): ?>
+						<tr>
+							<td colspan="3" class="duo-obituary-empty">현재 부고 소식이 없습니다.</td>
+						</tr>
+					<?php endif ?>
+					<?php foreach ($items as $content): ?>
 						<?php
 						$document_url = $url->getDocumentURLWithUID($content->uid);
 						$is_expired = duo_obituary_is_expired($content);
 						?>
-						<tr class="<?php echo $is_expired ? 'is-expired' : ''?>">
-							<td><?php echo duo_obituary_display($content, 'affiliation')?></td>
+						<tr class="<?php echo $is_expired ? 'is-expired' : '' ?>">
+							<td><?php echo duo_obituary_display($content, 'affiliation') ?></td>
 							<td class="duo-obituary-name">
-								<a href="<?php echo esc_url($document_url)?>"><?php echo duo_obituary_display($content, 'deceased_name')?></a>
+								<a
+									href="<?php echo esc_url($document_url) ?>"><?php echo duo_obituary_display($content, 'deceased_name') ?></a>
 							</td>
-							<td><?php echo duo_obituary_datetime_display($content, 'funeral_date')?></td>
+							<td><?php echo duo_obituary_datetime_display($content, 'funeral_date') ?></td>
 						</tr>
-					<?php endforeach?>
+					<?php endforeach ?>
 				</tbody>
 			</table>
 		</div>

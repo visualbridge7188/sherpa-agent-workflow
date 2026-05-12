@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Duo 부고알림 KBoard 스킨
  * Description: KBoard에 Duo 부고알림 전용 스킨을 추가합니다.
- * Version: 1.4.1
+ * Version: 1.4.5
  * Author: Duo
  * Text Domain: duo-obituary-kboard
  */
@@ -11,7 +11,7 @@ if(!defined('ABSPATH')){
 	exit;
 }
 
-define('DUO_OBITUARY_KBOARD_VERSION', '1.4.1');
+define('DUO_OBITUARY_KBOARD_VERSION', '1.4.5');
 define('DUO_OBITUARY_KBOARD_SKIN', 'duo-obituary-kboard');
 define('DUO_OBITUARY_KBOARD_SKIN_NAME', 'Duo 부고알림');
 define('DUO_OBITUARY_KBOARD_PLUGIN_DIR', plugin_dir_path(__FILE__));

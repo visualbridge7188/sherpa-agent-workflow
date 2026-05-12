@@ -31,45 +31,150 @@
 	};
 
 	function initLatestRolling(root){
-		if(!root.classList.contains('is-rolling')){
-			return;
-		}
-		if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-			return;
-		}
+		var targets = root.querySelectorAll('.is-rolling-target');
+		if(!targets.length) return;
 
-		var wrap = root.querySelector('.duo-obituary-latest-table-wrap');
-		var rows = root.querySelectorAll('tbody tr');
-		if(!wrap || rows.length <= 5){
-			return;
-		}
+		targets.forEach(function(target){
+			var tbody = target.querySelector('tbody');
+			if(!tbody) return;
 
-		var index = 0;
-		var paused = false;
-		var interval = parseInt(root.getAttribute('data-interval'), 10) || 3000;
+			// 기존 복제본 제거
+			var originals = Array.from(tbody.querySelectorAll('tr:not(.duo-cloned)'));
+			tbody.querySelectorAll('tr.duo-cloned').forEach(function(el){ el.remove(); });
 
-		root.addEventListener('mouseenter', function(){ paused = true; });
-		root.addEventListener('mouseleave', function(){ paused = false; });
-		root.addEventListener('focusin', function(){ paused = true; });
-		root.addEventListener('focusout', function(){ paused = false; });
+			var visibleOriginals = originals.filter(function(tr){
+				return tr.style.display !== 'none' && !tr.classList.contains('duo-obituary-no-results');
+			});
 
-		window.setInterval(function(){
-			if(paused){
+			// 검색어가 있는 경우 롤링 강제 중단
+			var searchInput = root.querySelector('.duo-obituary-latest-search-input');
+			var isSearching = searchInput && searchInput.value.trim().length > 0;
+
+			if(target._duoAnim) {
+				target._duoAnim.cancel();
+				target._duoAnim = null;
+			}
+
+			if(visibleOriginals.length <= 5 || isSearching){
+				root.classList.remove('is-rolling');
+				target.style.transform = 'translateY(0)';
 				return;
 			}
-			var rowHeight = rows[0].getBoundingClientRect().height || 94;
-			index += 1;
-			if(index > rows.length - 5){
-				index = 0;
-			}
-			wrap.scrollTo({
-				top: index * rowHeight,
-				behavior: 'smooth'
+
+			root.classList.add('is-rolling');
+			
+			// 행 복제 (심리스 루프를 위해 하단에 붙임)
+			visibleOriginals.forEach(function(tr){
+				var clone = tr.cloneNode(true);
+				clone.classList.add('duo-cloned');
+				tbody.appendChild(clone);
 			});
-		}, interval);
+
+			// 동적 애니메이션 실행 (Web Animations API)
+			var totalHeight = visibleOriginals.reduce(function(sum, tr){
+				return sum + tr.getBoundingClientRect().height;
+			}, 0);
+			if(!totalHeight){
+				totalHeight = visibleOriginals.length * 52;
+			}
+			var duration = visibleOriginals.length * 3000; // 항목당 3초
+
+			target._duoAnim = target.animate([
+				{ transform: 'translateY(0)' },
+				{ transform: 'translateY(-' + totalHeight + 'px)' }
+			], {
+				duration: duration,
+				iterations: Infinity,
+				easing: 'linear'
+			});
+
+			// 호버 시 정지/재개 (각 target에 대해 개별 처리)
+			target.parentElement.onmouseenter = function(){ if(target._duoAnim) target._duoAnim.pause(); };
+			target.parentElement.onmouseleave = function(){ if(target._duoAnim) target._duoAnim.play(); };
+		});
 	}
 
+	function initLatestSearch(root){
+		var form = root.querySelector('.duo-obituary-latest-search-form');
+		var input = root.querySelector('.duo-obituary-latest-search-input');
+		var submit = root.querySelector('.duo-obituary-latest-search-submit');
+		var overlay = root.querySelector('.duo-obituary-loading-overlay');
+		if(!input) return;
+
+		function doSearch(isInitial){
+			var keyword = input.value.trim().toLowerCase();
+			
+			if(keyword.length > 0){
+				root.classList.add('is-searching');
+			} else {
+				root.classList.remove('is-searching');
+			}
+
+			if(!isInitial) overlay.style.display = 'flex';
+
+			var execute = function(){
+				var tables = root.querySelectorAll('table');
+				tables.forEach(function(table){
+					var tbody = table.querySelector('tbody');
+					if(!tbody) return; 
+
+					var rows = Array.from(tbody.querySelectorAll('tr:not(.duo-cloned)')).filter(function(tr){
+						return !tr.classList.contains('duo-obituary-empty-row') && !tr.classList.contains('duo-obituary-no-results');
+					});
+
+					var noResults = tbody.querySelector('.duo-obituary-no-results');
+					var foundCount = 0;
+
+					rows.forEach(function(row){
+						if(!keyword){
+							row.style.display = '';
+							foundCount++;
+						} else {
+							var text = row.textContent.toLowerCase();
+							if(text.indexOf(keyword) !== -1){
+								row.style.display = '';
+								foundCount++;
+							} else {
+								row.style.display = 'none';
+							}
+						}
+					});
+
+					if(noResults){
+						noResults.style.display = foundCount === 0 ? '' : 'none';
+					}
+				});
+
+				if(!isInitial) overlay.style.display = 'none';
+				initLatestRolling(root);
+			};
+
+			if(isInitial){
+				execute();
+			} else {
+				setTimeout(execute, 400);
+			}
+		}
+
+		if(submit){
+			submit.onclick = function(){ doSearch(false); };
+		}
+		input.onkeypress = function(e){
+			if(e.which === 13 || e.keyCode === 13){
+				doSearch(false);
+				return false;
+			}
+		};
+
+		// 무조건 초기 실행 (검색어가 없어도 롤링 초기화를 위해)
+		doSearch(true);
+	}
+
+
 	document.addEventListener('DOMContentLoaded', function(){
-		document.querySelectorAll('.duo-obituary-latest').forEach(initLatestRolling);
+		document.querySelectorAll('.duo-obituary-latest').forEach(function(root){
+			initLatestSearch(root);
+		});
 	});
+
 })();

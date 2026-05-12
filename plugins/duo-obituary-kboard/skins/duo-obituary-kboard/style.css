@@ -360,8 +360,6 @@
 }
 
 .is-rolling-container {
-	height: 260px; /* 52px * 5 */
-	overflow: hidden;
 	position: relative;
 }
 
@@ -384,7 +382,8 @@
 }
 
 .duo-obituary-latest-table td {
-	height: 52px;
+	height: auto;
+	min-height: 52px;
 	padding: 10px 14px;
 	font-size: 13px;
 }
@@ -404,20 +403,15 @@
 	position: relative;
 }
 
-.is-rolling .duo-obituary-latest-table-wrap,
-.is-rolling .duo-obituary-mobile-latest-table-wrap {
-	max-height: 260px; /* 5개 행 기준 */
+.is-rolling .is-rolling-container {
+	height: 260px; /* 52px * 5 */
+	overflow: hidden;
 }
 
 
 
 .duo-obituary-latest-table-wrap::-webkit-scrollbar {
 	display: none;
-}
-
-.duo-obituary-latest.is-rolling .duo-obituary-latest-table-wrap {
-	max-height: 332px;
-	overflow: hidden;
 }
 
 .duo-obituary-latest.is-rolling .duo-obituary-latest-table thead {
@@ -672,7 +666,8 @@
 		padding: 10px 5px;
 		text-align: center;
 		border: 1px solid #ddd;
-		height: 52px;
+		height: auto;
+		min-height: 52px;
 		box-sizing: border-box;
 	}
 
@@ -680,12 +675,6 @@
 		background-color: #f8f9fa;
 		font-weight: bold;
 	}
-
-	.duo-obituary-mobile-latest-table-wrap.is-rolling-container {
-		height: 260px; /* 52px * 5 */
-		overflow: hidden;
-	}
-
 
 	.duo-obituary-search--mobile {
 		display: flex;
@@ -740,7 +729,8 @@
 	}
 
 	.duo-obituary-mobile-latest-table td {
-		height: 54px;
+		height: auto;
+		min-height: 54px;
 		padding: 10px 8px;
 		text-align: center;
 		border-bottom: 1px solid var(--duo-obituary-line);

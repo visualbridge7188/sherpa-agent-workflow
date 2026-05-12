@@ -24,5 +24,6 @@ grep -q 'duo-obituary-kboard/skins/duo-obituary-kboard/list.php' <<< "$ZIP_LIST"
 grep -q 'duo-obituary-kboard/skins/duo-obituary-kboard/latest.php' <<< "$ZIP_LIST"
 grep -q 'duo-obituary-kboard/skins/duo-obituary-kboard/document.php' <<< "$ZIP_LIST"
 grep -q 'duo-obituary-kboard/README.md' <<< "$ZIP_LIST"
+grep -q 'duo-obituary-kboard/ADMIN_GUIDE.md' <<< "$ZIP_LIST"
 
 echo "Smoke tests passed."

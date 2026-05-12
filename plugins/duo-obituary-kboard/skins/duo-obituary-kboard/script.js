@@ -71,8 +71,12 @@
 			});
 
 			// 동적 애니메이션 실행 (Web Animations API)
-			var itemHeight = 52;
-			var totalHeight = visibleOriginals.length * itemHeight;
+			var totalHeight = visibleOriginals.reduce(function(sum, tr){
+				return sum + tr.getBoundingClientRect().height;
+			}, 0);
+			if(!totalHeight){
+				totalHeight = visibleOriginals.length * 52;
+			}
 			var duration = visibleOriginals.length * 3000; // 항목당 3초
 
 			target._duoAnim = target.animate([

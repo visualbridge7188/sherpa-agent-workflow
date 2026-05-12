@@ -86,17 +86,21 @@ if($mode === 'skin'){
 	function esc_html($value){ return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 	function esc_attr($value){ return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 	function wp_json_encode($payload, $options = 0){ return json_encode($payload, $options); }
+	function wp_parse_args($args, $defaults = array()){ return array_merge($defaults, is_array($args) ? $args : array()); }
 	function kboard_xssfilter($value){ return $value; }
 	function kboard_safeiframe($value){ return $value; }
 	function trailingslashit($value){ return rtrim($value, '/') . '/'; }
 	function get_option($key, $default = false){ return $default; }
 	function update_option($key, $value, $autoload = null){ return true; }
 	function get_current_user_id(){ return 1; }
+	function kboard_sanitize_csv_field($value){ return $value; }
+	function kboard_keyword(){ return isset($_GET['keyword']) ? sanitize_text_field($_GET['keyword']) : ''; }
 
 	class DuoSmokeWpdb {
 		public $prefix = 'wp_';
 		public $option_values = array();
 		public $queries = array();
+		public $last_get_results_query = '';
 		public function esc_like($text){
 			return addcslashes($text, '_%\\');
 		}
@@ -129,12 +133,19 @@ if($mode === 'skin'){
 			}
 			return true;
 		}
+		public function get_results($query){
+			$this->last_get_results_query = $query;
+			return array();
+		}
 	}
 	$GLOBALS['wpdb'] = new DuoSmokeWpdb();
 
 	class KBoard {
 		public $skin = 'Duo 부고알림';
-		public function __construct($board_id = 0){}
+		public $board_id = 0;
+		public function __construct($board_id = 0){
+			$this->board_id = intval($board_id);
+		}
 	}
 
 	class KBContentOption {
@@ -169,6 +180,11 @@ if($mode === 'skin'){
 	$content->option->funeral_date = '2026-05-07 06:00';
 	ok(duo_obituary_is_expired($content) === false, 'Funeral date on current date should not be expired yet.');
 
+	$expired_content = (object)array('option' => (object)array('funeral_date' => '2026-05-06 08:00'));
+	$active_content = (object)array('option' => (object)array('funeral_date' => '2026-05-09 08:00'));
+	$latest_items = duo_obituary_active_latest_items(array($expired_content, $active_content));
+	ok(count($latest_items) === 1 && $latest_items[0] === $active_content, 'Latest template should remove expired obituaries before rendering.');
+
 	$_POST = array(
 		'action' => 'kboard_editor_execute',
 		'kboard_option_affiliation' => '대한상공회',
@@ -188,6 +204,7 @@ if($mode === 'skin'){
 	$filtered = duo_obituary_filter_insert_update_data($data, 1);
 	ok($filtered['title'] === '대한상공회/홍길동/2026-05-07 09:30', 'Editor save data should receive generated title.');
 	contains_text($filtered['content'], 'duo-obituary-payload', 'Editor save data should keep a hidden payload backup.');
+	contains_text($filtered['content'], '홍길동', 'Hidden payload should include searchable plain text.');
 	$payload = duo_obituary_decode_payload($filtered['content']);
 	ok($payload['deceased_name'] === '홍길동', 'Hidden payload should contain deceased name.');
 	$payload_content = (object)array('content' => $filtered['content']);
@@ -202,24 +219,58 @@ if($mode === 'skin'){
 
 	$list = (object)array('board' => (object)array('skin' => 'Duo 부고알림'));
 	$GLOBALS['duo_test_can_manage'] = false;
-	$_GET = array('duo_obituary_target' => 'deceased_mourner', 'duo_obituary_keyword' => '홍');
+	$_GET = array('keyword' => '홍');
 	$from = duo_obituary_add_query_joins('`wp_kboard_board_content`', 1, $list);
-	contains_text($from, 'duo_funeral_date', 'List query should join funeral date option.');
-	contains_text($from, 'duo_deceased_name', 'List query should join deceased name option.');
-	contains_text($from, 'duo_chief_mourner', 'List query should join chief mourner option.');
+	foreach (array('duo_affiliation', 'duo_deceased_name', 'duo_chief_mourner', 'duo_death_date', 'duo_coffin_date', 'duo_funeral_date', 'duo_place', 'duo_burial_place') as $alias) {
+		contains_text($from, $alias, "List query should join {$alias} option.");
+	}
 
 	$where = duo_obituary_query_where('1=1', 1, $list);
-	contains_text($where, "DATE(STR_TO_DATE(duo_funeral_date.`option_value`, '%Y-%m-%d %H:%i')) >= '2026-05-07'", 'Public query should hide expired obituaries.');
-	contains_text($where, 'duo_deceased_name.`option_value` LIKE', 'Integrated search should include deceased name.');
-	contains_text($where, 'duo_chief_mourner.`option_value` LIKE', 'Integrated search should include chief mourner.');
+	ok(strpos($where, ">= '2026-05-07'") === false, 'Public list query should show expired obituaries.');
+	foreach (array('duo_affiliation', 'duo_deceased_name', 'duo_chief_mourner', 'duo_death_date', 'duo_coffin_date', 'duo_funeral_date', 'duo_place', 'duo_burial_place') as $alias) {
+		contains_text($where, "{$alias}.`option_value` LIKE", "Integrated search should include {$alias}.");
+	}
+	$kboard_default_keyword_where = "`wp_kboard_board_content`.`board_id`='1' AND (`wp_kboard_board_content`.`title` LIKE '%홍%' OR `wp_kboard_board_content`.`content` LIKE '%홍%')";
+	$expanded_keyword_where = duo_obituary_query_where($kboard_default_keyword_where, 1, $list);
+	contains_text($expanded_keyword_where, "`wp_kboard_board_content`.`content` LIKE '%홍%') OR (duo_affiliation", 'Option search should broaden KBoard default keyword search instead of requiring both content and option matches.');
+
+	$latest_list = (object)array('board' => (object)array('skin' => 'Duo 부고알림'), 'is_latest' => true);
+	$latest_where = duo_obituary_query_where('1=1', 1, $latest_list);
+	contains_text($latest_where, "DATE(STR_TO_DATE(duo_funeral_date.`option_value`, '%Y-%m-%d %H:%i')) >= '2026-05-07'", 'Latest query should hide expired obituaries.');
+	contains_text($latest_where, 'duo_place.`option_value` LIKE', 'Latest search should include funeral hall option.');
+	contains_text($latest_where, 'duo_burial_place.`option_value` LIKE', 'Latest search should include burial place option.');
+
+	$manual_latest_list = (object)array('is_latest' => true);
+	$manual_latest_where = duo_obituary_query_where('1=1', 1, $manual_latest_list);
+	contains_text($manual_latest_where, "DATE(STR_TO_DATE(duo_funeral_date.`option_value`, '%Y-%m-%d %H:%i')) >= '2026-05-07'", 'Latest query should hide expired obituaries even when latest.php creates a fresh list without board metadata.');
 
 	$GLOBALS['duo_test_can_manage'] = true;
 	$admin_where = duo_obituary_query_where('1=1', 1, $list);
 	ok(strpos($admin_where, ">= '2026-05-07'") === false, 'Manager query should not hide expired obituaries.');
 
 	$orderby = duo_obituary_query_orderby('date DESC', 1, $list);
-	contains_text($orderby, 'CASE WHEN', 'Manager order should separate current and expired obituaries.');
-	contains_text($orderby, 'END DESC', 'Expired manager items should sort by recent past first.');
+	contains_text($orderby, "STR_TO_DATE(duo_funeral_date.`option_value`, '%Y-%m-%d %H:%i') DESC", 'List order should sort by later funeral date first.');
+	ok(duo_obituary_latest_rpp(5, 1, $latest_list) === 100, 'Latest list should request enough rows for rolling.');
+
+	ok(duo_obituary_export_selected_columns(array('uid', 'deceased_name', 'bad')) === array('uid', 'deceased_name'), 'Export column selection should keep only allowed columns.');
+	ok(duo_obituary_export_normalize_months('999') === 'all', 'Export months should fall back to all for invalid values.');
+	ok(duo_obituary_export_start_date('3') === '20260207100000', 'Export month filter should use written date relative to current time.');
+	ok(duo_obituary_csv_safe('=SUM(A1:A2)') === "'=SUM(A1:A2)", 'CSV export should guard formula-like values.');
+	$labels = duo_obituary_export_columns();
+	ok($labels['deceased_name'] === '고인명' && $labels['funeral_date'] === '발인일', 'Export headers should use Korean labels.');
+	duo_obituary_export_rows(7, array('months' => '3'));
+	contains_text($GLOBALS['wpdb']->last_get_results_query, "c.`date` >= '20260207100000'", 'Export month filter should constrain written date when no posts are selected.');
+	duo_obituary_export_rows(7, array('months' => '3', 'uids' => array(10, 11)));
+	contains_text($GLOBALS['wpdb']->last_get_results_query, 'c.`uid` IN (10,11)', 'Export selected rows should constrain selected post IDs.');
+	ok(strpos($GLOBALS['wpdb']->last_get_results_query, "c.`date` >=") === false, 'Export selected rows should ignore month filter.');
+
+	$style = file_get_contents($root . '/skin/duo-obituary-kboard/style.css');
+	$script = file_get_contents($root . '/skin/duo-obituary-kboard/script.js');
+	contains_text($style, '.is-rolling .is-rolling-container', 'Latest rolling viewport height should only apply while rolling.');
+	ok(!preg_match('/^\.is-rolling-container\s*\{[^}]*height:\s*260px;/m', $style), 'Latest container should not have unconditional fixed height.');
+	contains_text($style, 'min-height: 52px;', 'Latest rows should have a minimum row height instead of clipping wrapped content.');
+	ok(!preg_match('/\.duo-obituary-mobile-latest-table td\s*\{[^}]*\n\t\theight:\s*54px;/m', $style), 'Mobile latest cells should not force a clipping fixed height.');
+	contains_text($script, 'getBoundingClientRect().height', 'Rolling distance should use actual visible row heights.');
 
 	exit(0);
 }

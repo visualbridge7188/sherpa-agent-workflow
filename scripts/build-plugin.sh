@@ -14,10 +14,17 @@ if [ ! -d "$SKIN_SOURCE" ]; then
 	exit 1
 fi
 
+if [ -d "$SKIN_TARGET" ] && ! diff -qr "$SKIN_SOURCE" "$SKIN_TARGET" >/dev/null; then
+	echo "Skin source and packaged skin differ." >&2
+	echo "Sync $SKIN_SOURCE and $SKIN_TARGET before building to avoid overwriting work." >&2
+	exit 1
+fi
+
 mkdir -p "$PLUGIN_DIR/skins" "$DIST_DIR"
 rm -rf "$SKIN_TARGET"
 cp -R "$SKIN_SOURCE" "$SKIN_TARGET"
 cp "$ROOT_DIR/README.md" "$PLUGIN_DIR/README.md"
+cp "$ROOT_DIR/ADMIN_GUIDE.md" "$PLUGIN_DIR/ADMIN_GUIDE.md"
 
 rm -f "$ZIP_PATH"
 (

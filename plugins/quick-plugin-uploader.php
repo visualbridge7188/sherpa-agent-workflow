@@ -28,6 +28,10 @@ function qpu_add_admin_menu() {
 	add_action( 'admin_print_styles-' . $page, function() {
 		wp_enqueue_style( 'dashicons' );
 	});
+
+	add_action( 'admin_print_scripts-' . $page, function() {
+		wp_enqueue_script( 'jquery' );
+	});
 }
 
 /**
@@ -184,14 +188,14 @@ function qpu_render_admin_page() {
 			});
 
 			function handleFileUpload(file) {
-				if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
+				if (file.type !== 'application/zip' && file.type !== 'application/x-zip-compressed' && !file.name.toLowerCase().endsWith('.zip')) {
 					showMessage('<?php _e( 'ZIP 파일만 업로드 가능합니다.', 'quick-plugin-uploader' ); ?>', 'error');
 					return;
 				}
 
 				const formData = new FormData();
 				formData.append('action', 'quick_plugin_upload');
-				formData.append('plugin_zip', file);
+				formData.append('zip_file', file);
 				formData.append('auto_activate', $autoActivate.is(':checked') ? '1' : '0');
 				formData.append('overwrite', $overwrite.val());
 				formData.append('_ajax_nonce', '<?php echo wp_create_nonce( "qpu_upload_nonce" ); ?>');
@@ -254,7 +258,12 @@ function qpu_handle_ajax_upload() {
 		wp_send_json_error( array( 'message' => __( '권한이 없습니다.', 'quick-plugin-uploader' ) ) );
 	}
 
-	if ( empty( $_FILES['zip_file'] ) ) {
+	$file_input_name = 'zip_file';
+	if ( empty( $_FILES['zip_file'] ) && ! empty( $_FILES['plugin_zip'] ) ) {
+		$file_input_name = 'plugin_zip';
+	}
+
+	if ( empty( $_FILES[ $file_input_name ] ) ) {
 		wp_send_json_error( array( 'message' => __( '파일이 전송되지 않았습니다.', 'quick-plugin-uploader' ) ) );
 	}
 
@@ -267,7 +276,7 @@ function qpu_handle_ajax_upload() {
 	require_once ABSPATH . 'wp-admin/includes/theme.php';
 
 	// 3. 파일 처리
-	$file = $_FILES['zip_file'];
+	$file = $_FILES[ $file_input_name ];
 	$overrides = array( 'test_form' => false, 'mimes' => array( 'zip' => 'application/zip' ) );
 	$upload = wp_handle_upload( $file, $overrides );
 
@@ -340,6 +349,4 @@ function qpu_handle_ajax_upload() {
 		'redirect' => $redirect
 	) );
 }
-
-
 
